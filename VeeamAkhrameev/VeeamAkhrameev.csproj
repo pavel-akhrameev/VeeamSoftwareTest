@@ -39,9 +39,17 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Block.cs" />
-    <Compile Include="BlockBuffer.cs" />
-    <Compile Include="BlockData.cs" />
+    <Compile Include="BlockBuffer\Block.cs" />
+    <Compile Include="BlockBuffer\BlockBuffer.cs" />
+    <Compile Include="BlockBuffer\BlockQueue.cs" />
+    <Compile Include="BlockBuffer\IAvailableRamChecker.cs" />
+    <Compile Include="BlockBuffer\IBlockBuffer.cs" />
+    <Compile Include="BlockBuffer\IBlockQueue.cs" />
+    <Compile Include="BlockBuffer\IBlockStorage.cs" />
+    <Compile Include="BlockBuffer\BlockData.cs" />
+    <Compile Include="BlockBuffer\BlockStorage.cs" />
+    <Compile Include="BlockBuffer\IReadableBlockQueue.cs" />
+    <Compile Include="BlockBuffer\IWritableBlockQueue.cs" />
     <Compile Include="BlockProcessor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

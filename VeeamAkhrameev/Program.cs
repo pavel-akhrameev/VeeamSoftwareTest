@@ -35,8 +35,10 @@ namespace VeeamAkhrameev
 			try
 			{
 				var systemInfo = new SystemInfo();
-				var blockBuffer = new BlockBuffer(blockLength);
-				var fileProcessor = new FileProcessor(systemInfo, blockBuffer);
+				var blockStorage = new BlockStorage(systemInfo);
+				var blockBuffer = new BlockBuffer(blockStorage);
+				var blockQueue = new BlockQueue(blockBuffer);
+				var fileProcessor = new FileProcessor(systemInfo, blockQueue);
 
 				fileProcessor.ProcessFile(filePath, blockLength);
 			}

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -11,17 +10,14 @@ namespace VeeamAkhrameev
 	{
 		private const int MaxBlockAmount = Int32.MaxValue;
 		private const int WaitForOperationCompleteTimeOut = 100;
-		private const int MinRamReserveMiB = 100;
 
 		private static readonly ILog _log = LogManager.GetLogger(System.Reflection.Assembly.GetEntryAssembly(), typeof(FileProcessor).Name);
 
 		private readonly SystemInfo _systemInfo;
-		private readonly ConcurrentQueue<Block> _blocks = new ConcurrentQueue<Block>();
+		private readonly IBlockQueue _blockQueue;
 
-		private BlockBuffer _blockBuffer;
 		private byte[][] _fileSignature;
 		private int _blockLength;
-		private int _blockLengthMiB;
 		private long _fileLength;
 		private long _blocksInFile;
 		private int _logicalProcessorsAmount;
@@ -30,17 +26,15 @@ namespace VeeamAkhrameev
 		private AutoResetEvent _newBlockReadedEvent = new AutoResetEvent(false);
 		private volatile bool _exceptionThrown = false;
 
-		public FileProcessor(SystemInfo systemInfo, BlockBuffer blockBuffer)
+		public FileProcessor(SystemInfo systemInfo, IBlockQueue blockQueue)
 		{
 			this._systemInfo = systemInfo;
-			this._blockBuffer = blockBuffer;
+			this._blockQueue = blockQueue;
 		}
 
 		public void ProcessFile(string filePath, int blockLength)
 		{
 			this._blockLength = blockLength;
-			const int BytesInMiB = 1048576;
-			this._blockLengthMiB = blockLength / BytesInMiB;
 
 			FileInfo fileInfo;
 			try
@@ -68,9 +62,7 @@ namespace VeeamAkhrameev
 			if (_fileLength < _blockLength)
 			{
 				// Если файл меньше заданного размера блока - нет смысла занимать память на целый блок.
-				_blockLength = Math.Max((int)_fileLength, _blockBuffer.MinimalBlockSize);
-				_blockLengthMiB = blockLength / BytesInMiB;
-				_blockBuffer.Initialize(_blockLength);
+				_blockLength = Math.Max((int)_fileLength, BlockStorage.MinimalBlockSize);
 			}
 
 			this._fileSignature = new byte[(int)_blocksInFile][];
@@ -81,10 +73,7 @@ namespace VeeamAkhrameev
 			this._logicalProcessorsAmount = _systemInfo.LogicalProcessors;
 			var maxBufferBlockAmount = (int)Math.Min(_blocksInFile, _logicalProcessorsAmount * 2);
 
-			// Если доступной оперативной пямяти может быть выделено меньше, чем необходимо для размещения нужного количества блоков, то выделяется столько, сколько получится.
-			AllocateRam(maxBufferBlockAmount);
-
-			_log.Info("Signature calculation process has been started.");
+			_blockQueue.Initialize(_blockLength, maxBufferBlockAmount);
 
 			// Запуск потока читающего блоки из файла.
 			var readDataThreadStart = new ParameterizedThreadStart(this.ReadDataProcess);
@@ -97,6 +86,8 @@ namespace VeeamAkhrameev
 			var signatureGenerationThread = new Thread(signatureGenerationThreadStart);
 			signatureGenerationThread.IsBackground = true;
 			signatureGenerationThread.Start();
+
+			_log.Info("Signature calculation process has been started.");
 
 			readDataThread.Join();
 			signatureGenerationThread.Join();
@@ -135,7 +126,7 @@ namespace VeeamAkhrameev
 
 					#endregion
 
-					var isDequeued = _blocks.TryDequeue(out Block blockToProcess);
+					var isDequeued = _blockQueue.TryGetUnprocessedBlock(out Block blockToProcess);
 					if (isDequeued)
 					{
 						_threadSemaphore.Wait();
@@ -170,7 +161,7 @@ namespace VeeamAkhrameev
 
 		protected virtual void ReadDataProcess(FileInfo fileInfo)
 		{
-			int currentBlockId = 0;
+			int currentBlockNumber = 0;
 			using (var fileStream = fileInfo.OpenRead())
 			{
 				for (; ; )
@@ -180,19 +171,17 @@ namespace VeeamAkhrameev
 						break;
 					}
 
-					BlockData oneBlockData;
-
-					var gotBlockBuffer = _blockBuffer.TryGetUnusedBlockBuffer(out oneBlockData);
-					if (gotBlockBuffer)
+					var gotBlockData = _blockQueue.TryGetUnusedDataBlock(out BlockData blockData);
+					if (gotBlockData)
 					{
 						try
 						{
 							int expectedReadedLength;
 
-							var fileEnded = currentBlockId == _blocksInFile;
+							var fileEnded = currentBlockNumber == _blocksInFile;
 							if (!fileEnded)
 							{
-								var isLastBlock = currentBlockId == _blocksInFile - 1;
+								var isLastBlock = currentBlockNumber == _blocksInFile - 1;
 								expectedReadedLength = !isLastBlock
 									? _blockLength
 									: (int)(_fileLength - _blockLength * (_blocksInFile - 1));
@@ -202,7 +191,7 @@ namespace VeeamAkhrameev
 								expectedReadedLength = 0;
 							}
 
-							var readedLength = fileStream.Read(oneBlockData.Data, 0, _blockLength);
+							var readedLength = fileStream.Read(blockData.Data, 0, _blockLength);
 							if (readedLength != expectedReadedLength)
 							{
 								// Такого поведения не ожидается, но если вдруг в каких-то условиях это исключение будет возникать,
@@ -212,13 +201,10 @@ namespace VeeamAkhrameev
 
 							if (!fileEnded)
 							{
-								_blockBuffer.MarkBlockInUse(oneBlockData, readedLength);
-								var newBlock = new Block(currentBlockId, oneBlockData);
-
-								_blocks.Enqueue(newBlock);
+								_blockQueue.MarkBlockReadyToProcess(currentBlockNumber, blockData, readedLength);
 								_newBlockReadedEvent.Set();
 
-								currentBlockId++;
+								currentBlockNumber++;
 							}
 							else
 							{
@@ -227,7 +213,7 @@ namespace VeeamAkhrameev
 						}
 						catch (Exception ex)
 						{
-							var message = $"Failed to read the block number {currentBlockId} from file.";
+							var message = $"Failed to read the block number {currentBlockNumber} from file.";
 							_log.Error(message, ex);
 
 							_exceptionThrown = true;
@@ -270,7 +256,7 @@ namespace VeeamAkhrameev
 					_fileSignature[block.Number] = hashSum; // Вставить hash-сумму блока в сигнатуру файла.
 				}
 
-				_blockBuffer.MarkBlockProcessed(block.BlockData);
+				_blockQueue.MarkBlockProcessed(block);
 				_blockProcessedEvent.Set();
 			}
 			catch (Exception ex)
@@ -290,29 +276,6 @@ namespace VeeamAkhrameev
 		{
 			var block = (Block)blockObject;
 			BlockSignatureProcess(block);
-		}
-
-		private void AllocateRam(int maxBlocksAmount)
-		{
-			_blockBuffer.CreateNewBlock();
-
-			for (var blockIndex = 1; blockIndex < maxBlocksAmount; blockIndex++)
-			{
-				var availableRamMiB = _systemInfo.GetAvailableRam();
-				if (availableRamMiB <= _blockLengthMiB + MinRamReserveMiB)
-				{
-					break;
-				}
-
-				try
-				{
-					_blockBuffer.CreateNewBlock();
-				}
-				catch (OutOfMemoryException)
-				{
-					break;
-				}
-			}
 		}
 
 		private static void WritefileSignature(byte[][] signature)
