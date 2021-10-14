@@ -5,6 +5,9 @@ using log4net;
 
 namespace VeeamAkhrameev
 {
+	/// <summary>
+	/// Класс генерирующий сигнатуру переданного файла.
+	/// </summary>
 	internal class FileProcessor
 	{
 		private const int MaxBlockAmount = Int32.MaxValue;
@@ -40,6 +43,11 @@ namespace VeeamAkhrameev
 			_signatureCalculator.CalculationFailed += HandleComponentFault;
 		}
 
+		/// <summary>
+		/// Сгенерировать и вывести в консоль сигнатуру указанного файла.
+		/// </summary>
+		/// <param name="filePath">Путь к файлу для которого будет сгенерирована сигнатура.</param>
+		/// <param name="blockLength">Размер блока.</param>
 		public void ProcessFile(string filePath, int blockLength)
 		{
 			this._blockLength = blockLength > 0 ? blockLength : throw new ArgumentOutOfRangeException("blockLength");

@@ -6,6 +6,10 @@ using log4net;
 
 namespace VeeamAkhrameev
 {
+	/// <summary>
+	/// Класс выполняющий поблочное чтение указанного файла. 
+	/// Прочитанные блоки по порядку добавляются в очередь. 
+	/// </summary>
 	internal class FileReader : IFileReader
 	{
 		private const int WaitForEmptyBlockTimeout = 100; // milliseconds.
@@ -23,13 +27,16 @@ namespace VeeamAkhrameev
 		private Thread _readDataThread;
 		private CancellationToken _cancellationToken;
 
+		/// <inheritdoc/>
 		public event Action FileReadFailed;
 
+		/// <param name="blockQueue">Очередь блоков, куда будут добавлены прочитанные из файла блоки данных.</param>
 		public FileReader(IWritableBlockQueue blockQueue)
 		{
 			this._blockQueue = blockQueue;
 		}
 
+		/// <inheritdoc/>
 		public void StartReadFileIntoBlockQueue(FileInfo fileInfo, int blockLength, CancellationToken cancellationToken)
 		{
 			this._fileInfo = fileInfo;
@@ -47,6 +54,7 @@ namespace VeeamAkhrameev
 			_readDataThread.Start(_fileInfo);
 		}
 
+		/// <inheritdoc/>
 		public void WaitForReadingFinished()
 		{
 			_readDataThread.Join();

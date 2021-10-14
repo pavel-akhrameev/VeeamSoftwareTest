@@ -5,6 +5,11 @@ namespace VeeamAkhrameev
 {
 	internal class BlockProcessor
 	{
+		/// <summary>
+		/// Расчитать hash-сумму блока данных по алгоритму SHA-256.
+		/// </summary>
+		/// <param name="blockData"></param>
+		/// <returns></returns>
 		public static byte[] ProcessBlock(BlockData blockData)
 		{
 			byte[] hashSum;

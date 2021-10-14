@@ -81,10 +81,5 @@ namespace VeeamAkhrameev
 				_blocksState[blockData.Id] = BlockState.Unused;
 			}
 		}
-
-		public void FreeUnusedBlocks()
-		{
-			throw new NotImplementedException(); // TODO
-		}
 	}
 }

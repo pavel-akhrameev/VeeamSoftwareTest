@@ -51,8 +51,6 @@ namespace VeeamAkhrameev
 			return blockData;
 		}
 
-		// TODO: метод типа DropBlockData.
-
 		/// <remarks> Если доступной оперативной пямяти не может быть выделено столько, сколько необходимо для размещения нужного количества блоков,
 		/// то создастся такое количество блоков, сколько позволит разместить система.</remarks>
 		private void AllocateRam(int requiredBlocksAmount)

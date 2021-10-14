@@ -6,6 +6,9 @@ using log4net;
 
 namespace VeeamAkhrameev
 {
+	/// <summary>
+	/// Класс выполняющий генерацию сигнатуры.
+	/// </summary>
 	internal class SignatureCalculator : ISignatureCalculator
 	{
 		private const int WaitForBlockToProcessTimeout = 100; // milliseconds.
@@ -23,14 +26,18 @@ namespace VeeamAkhrameev
 		private SemaphoreSlim _threadSemaphore;
 		private CancellationToken _cancellationToken;
 
+		/// <inheritdoc/>
 		public event Action CalculationFailed;
 
+		/// <param name="blockQueue">Очередь блоков, откуда будут извлекаться блоки данных для генерации сигнатуры.</param>
+		/// <param name="signatureWriter">Объект для вывода сигнатуры.</param>
 		public SignatureCalculator(IReadableBlockQueue blockQueue, ISignatureWriter signatureWriter)
 		{
 			this._blockQueue = blockQueue;
 			this._signatureWriter = signatureWriter;
 		}
 
+		/// <inheritdoc/>
 		public void StartCalculateSignature(int threadCount, long blockCount, CancellationToken cancellationToken)
 		{
 			this._threadCount = threadCount;
@@ -44,6 +51,7 @@ namespace VeeamAkhrameev
 			_signatureCalculationThread.Start();
 		}
 
+		/// <inheritdoc/>
 		public void WaitForCalculationFinished()
 		{
 			_signatureCalculationThread.Join();

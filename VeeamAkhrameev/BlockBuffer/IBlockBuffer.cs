@@ -11,7 +11,5 @@ namespace VeeamAkhrameev
 		void MarkBlockReadyToProcess(BlockData blockData, int newBlockDataLength);
 
 		void MarkBlockProcessed(BlockData blockData);
-
-		void FreeUnusedBlocks();
 	}
 }
