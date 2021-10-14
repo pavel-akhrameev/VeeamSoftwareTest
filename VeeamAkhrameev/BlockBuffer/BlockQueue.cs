@@ -7,6 +7,7 @@ namespace VeeamAkhrameev
 	{
 		private readonly IBlockBuffer _blockBuffer;
 		private readonly ConcurrentQueue<Block> _blocks = new ConcurrentQueue<Block>();
+		private readonly Object _blockBufferLockObject = new Object();
 
 		public BlockQueue(IBlockBuffer blockBuffer)
 		{
@@ -21,7 +22,7 @@ namespace VeeamAkhrameev
 		public bool TryGetUnusedDataBlock(out BlockData blockData)
 		{
 			bool result;
-			lock (_blockBuffer)
+			lock (_blockBufferLockObject)
 			{
 				result = _blockBuffer.TryGetUnusedDataBlock(out blockData);
 			}
@@ -30,7 +31,7 @@ namespace VeeamAkhrameev
 
 		public void MarkBlockReadyToProcess(int blockNumber, BlockData blockData, int newBlockDataLength)
 		{
-			lock (_blockBuffer)
+			lock (_blockBufferLockObject)
 			{
 				_blockBuffer.MarkBlockReadyToProcess(blockData, newBlockDataLength);
 			}
@@ -47,7 +48,7 @@ namespace VeeamAkhrameev
 
 		public void MarkBlockProcessed(Block block)
 		{
-			lock (_blockBuffer)
+			lock (_blockBufferLockObject)
 			{
 				_blockBuffer.MarkBlockProcessed(block.BlockData);
 			}
@@ -56,7 +57,7 @@ namespace VeeamAkhrameev
 		public void FreeUnusedBlocks()
 		{
 			// TODO
-			lock (_blockBuffer)
+			lock (_blockBufferLockObject)
 			{
 				_blockBuffer.FreeUnusedBlocks();
 			}

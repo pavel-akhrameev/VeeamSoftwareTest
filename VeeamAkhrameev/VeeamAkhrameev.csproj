@@ -42,7 +42,7 @@
     <Compile Include="BlockBuffer\Block.cs" />
     <Compile Include="BlockBuffer\BlockBuffer.cs" />
     <Compile Include="BlockBuffer\BlockQueue.cs" />
-    <Compile Include="BlockBuffer\IAvailableRamChecker.cs" />
+    <Compile Include="SystemInfoProvider\IAvailableRamChecker.cs" />
     <Compile Include="BlockBuffer\IBlockBuffer.cs" />
     <Compile Include="BlockBuffer\IBlockQueue.cs" />
     <Compile Include="BlockBuffer\IBlockStorage.cs" />
@@ -51,10 +51,17 @@
     <Compile Include="BlockBuffer\IReadableBlockQueue.cs" />
     <Compile Include="BlockBuffer\IWritableBlockQueue.cs" />
     <Compile Include="BlockProcessor.cs" />
+    <Compile Include="FileReader.cs" />
+    <Compile Include="IFileReader.cs" />
+    <Compile Include="SystemInfoProvider\IProcessorInfoProvider.cs" />
+    <Compile Include="ISignatureCalculator.cs" />
+    <Compile Include="ISignatureWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FileProcessor.cs" />
-    <Compile Include="SystemInfo.cs" />
+    <Compile Include="SignatureCalculator.cs" />
+    <Compile Include="SignatureWriter.cs" />
+    <Compile Include="SystemInfoProvider\SystemInfoProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -80,13 +80,15 @@ namespace VeeamAkhrameev
 
 		private BlockData CreateNewBlock()
 		{
-			var newBlockId = _lastBlockId + 1;
-			var newBlockData = new BlockData(newBlockId, _blockLength);
-
-			_lastBlockId += 1;
+			BlockData newBlockData;
 
 			lock (_blocks)
 			{
+				var newBlockId = _lastBlockId + 1;
+				newBlockData = new BlockData(newBlockId, _blockLength);
+
+				_lastBlockId = newBlockId;
+
 				_blocks.Add(newBlockId, newBlockData);
 			}
 

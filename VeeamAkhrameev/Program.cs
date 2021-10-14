@@ -32,14 +32,21 @@ namespace VeeamAkhrameev
 				return;
 			}
 
+			#region Dependency injection
+
+			var systemInfoProvider = new SystemInfoProvider();
+			var blockStorage = new BlockStorage(systemInfoProvider);
+			var blockBuffer = new BlockBuffer(blockStorage);
+			var blockQueue = new BlockQueue(blockBuffer);
+			var fileReader = new FileReader(blockQueue);
+			var signatureWriter = new SignatureWriter();
+			var signatureCalculator = new SignatureCalculator(blockQueue, signatureWriter);
+			var fileProcessor = new FileProcessor(signatureCalculator, fileReader, blockQueue, signatureWriter, systemInfoProvider);
+
+			#endregion
+
 			try
 			{
-				var systemInfo = new SystemInfo();
-				var blockStorage = new BlockStorage(systemInfo);
-				var blockBuffer = new BlockBuffer(blockStorage);
-				var blockQueue = new BlockQueue(blockBuffer);
-				var fileProcessor = new FileProcessor(systemInfo, blockQueue);
-
 				fileProcessor.ProcessFile(filePath, blockLength);
 			}
 			catch (Exception exception)

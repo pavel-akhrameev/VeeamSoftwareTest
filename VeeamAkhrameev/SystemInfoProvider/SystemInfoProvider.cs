@@ -3,15 +3,15 @@ using System.Diagnostics;
 
 namespace VeeamAkhrameev
 {
-	internal class SystemInfo : IAvailableRamChecker
+	internal class SystemInfoProvider : IAvailableRamChecker, IProcessorInfoProvider
 	{
-		private int _logicalProcessors;
+		private readonly int _logicalProcessors;
 		private PerformanceCounter _ramCounter;
 
-		public SystemInfo()
+		public SystemInfoProvider()
 		{
-			_logicalProcessors = Environment.ProcessorCount;
-			_ramCounter = new PerformanceCounter("Memory", "Available MBytes", true);
+			this._logicalProcessors = Environment.ProcessorCount;
+			this._ramCounter = new PerformanceCounter("Memory", "Available MBytes", true);
 		}
 
 		public int LogicalProcessors

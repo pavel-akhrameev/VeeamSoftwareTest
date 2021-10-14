@@ -30,11 +30,14 @@ namespace VeeamAkhrameev
 			_blockStorage.Initialize(blockLength, requiredBlocksAmount);
 			var blockStorageSize = _blockStorage.StorageSize;
 
-			// Инициализация состояния блоков в буфере.
-			_blocksState = new Dictionary<int, BlockState>(blockStorageSize);
-			for (int blockIndex = 0; blockIndex < blockStorageSize; blockIndex++)
+			lock (_blocksState)
 			{
-				_blocksState.Add(blockIndex, BlockState.Unused);
+				// Инициализация состояния блоков в буфере.
+				_blocksState = new Dictionary<int, BlockState>(blockStorageSize);
+				for (int blockIndex = 0; blockIndex < blockStorageSize; blockIndex++)
+				{
+					_blocksState.Add(blockIndex, BlockState.Unused);
+				}
 			}
 		}
 
