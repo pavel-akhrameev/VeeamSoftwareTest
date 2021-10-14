@@ -68,7 +68,7 @@ namespace VeeamAkhrameev
 
 			#region Checking block count in the file
 
-			this._blocksInFile = (long)Math.Ceiling((float)_fileLength / _blockLength);
+			this._blocksInFile = CalculationHelper.CalculateBlockCountInFile(_fileLength, _blockLength);
 			if (_blocksInFile > MaxBlockAmount)
 			{
 				var message = $"With block length={_blockLength} is not possible to calculate file signature, due to unacceptably large blocks amount.";

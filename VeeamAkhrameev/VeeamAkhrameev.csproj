@@ -42,6 +42,7 @@
     <Compile Include="BlockBuffer\Block.cs" />
     <Compile Include="BlockBuffer\BlockBuffer.cs" />
     <Compile Include="BlockBuffer\BlockQueue.cs" />
+    <Compile Include="CalculationHelper.cs" />
     <Compile Include="SystemInfoProvider\IAvailableRamChecker.cs" />
     <Compile Include="BlockBuffer\IBlockBuffer.cs" />
     <Compile Include="BlockBuffer\IBlockQueue.cs" />

@@ -42,7 +42,7 @@ namespace VeeamAkhrameev
 			this._fileInfo = fileInfo;
 			this._blockLength = blockLength;
 			this._fileLength = _fileInfo.Length;
-			this._blocksInFile = (long)Math.Ceiling((float)_fileLength / _blockLength);
+			this._blocksInFile = CalculationHelper.CalculateBlockCountInFile(_fileLength, _blockLength);
 			this._lastBlockId = _blocksInFile - 1;
 
 			this._cancellationToken = cancellationToken;
