@@ -98,7 +98,7 @@ namespace VeeamAkhrameev
 			this._cancellationSource = new CancellationTokenSource();
 
 			// Запуск потока читающего блоки из файла.
-			_fileReader.StartReadFileIntoBlockQueue(fileInfo, blockLength, _cancellationSource.Token);
+			_fileReader.StartReadFileIntoBlockQueue(fileInfo, _blockLength, _cancellationSource.Token);
 
 			// Запуск потока генерирующего сигнатуру.
 			_signatureCalculator.StartCalculateSignature(_logicalProcessorsAmount, _blocksInFile, _cancellationSource.Token);
